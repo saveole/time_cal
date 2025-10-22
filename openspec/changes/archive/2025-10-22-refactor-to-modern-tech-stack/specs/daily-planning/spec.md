@@ -1,8 +1,4 @@
-# daily-planning Specification
-
-## Purpose
-TBD - created by archiving change add-time-management-system. Update Purpose after archive.
-## Requirements
+## MODIFIED Requirements
 ### Requirement: Activity Time Logging
 The system SHALL allow users to record their daily work and free time activities with cloud storage and real-time synchronization.
 
@@ -54,6 +50,7 @@ The system SHALL provide categorization for different types of activities with e
 - **AND** the system SHALL show time spent per category with interactive charts
 - **AND** the system SHALL maintain filter state in URL for sharing
 
+## ADDED Requirements
 ### Requirement: Real-time Activity Tracking
 The system SHALL provide real-time activity tracking with live updates across devices.
 
@@ -82,4 +79,3 @@ The system SHALL provide advanced features for managing and organizing activitie
 - **THEN** the system SHALL provide search functionality with fuzzy matching
 - **AND** the system SHALL allow filtering by date range, category, and keywords
 - **AND** the system SHALL provide instant search results using debounced input
-
