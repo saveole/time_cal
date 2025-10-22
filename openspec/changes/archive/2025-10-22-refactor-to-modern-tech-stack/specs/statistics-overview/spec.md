@@ -1,8 +1,4 @@
-# statistics-overview Specification
-
-## Purpose
-TBD - created by archiving change add-time-management-system. Update Purpose after archive.
-## Requirements
+## MODIFIED Requirements
 ### Requirement: Time Usage Dashboard
 The system SHALL provide a comprehensive dashboard showing time usage statistics with modern data visualization and real-time updates.
 
@@ -69,6 +65,7 @@ The system SHALL allow users to export their time data for external analysis wit
 - **AND** the system SHALL include key metrics, trends, and recommendations
 - **AND** the system SHALL provide customizable report templates
 
+## ADDED Requirements
 ### Requirement: Advanced Analytics Dashboard
 The system SHALL provide comprehensive analytics with interactive visualizations and predictive insights.
 
@@ -98,4 +95,3 @@ The system SHALL provide real-time statistics updates without requiring page ref
 - **THEN** the system SHALL calculate and display productivity scores
 - **AND** the system SHALL show efficiency metrics like focus time vs break time ratios
 - **AND** the system SHALL provide benchmarking against user's historical performance
-
