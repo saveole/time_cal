@@ -68,18 +68,11 @@ export function Header() {
                     </Button>
                   </div>
                 ) : (
-                  <div className="flex items-center gap-2">
-                    <Button variant="ghost" size="sm" asChild>
-                      <Link href="/auth/register">
-                        注册
-                      </Link>
-                    </Button>
-                    <Button variant="outline" size="sm" asChild>
-                      <Link href="/auth/login">
-                        登录
-                      </Link>
-                    </Button>
-                  </div>
+                  <Button variant="outline" size="sm" asChild>
+                    <Link href="/auth/login">
+                      登录
+                    </Link>
+                  </Button>
                 )}
               </>
             )}

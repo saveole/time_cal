@@ -1,0 +1,117 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { useAuth } from '@/contexts/auth-context'
+
+export default function AuthCallback() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const { user, loading } = useAuth()
+  const [isProcessing, setIsProcessing] = useState(false)
+  const [redirectAttempted, setRedirectAttempted] = useState(false)
+
+  useEffect(() => {
+    console.log('🔄 [Callback] Auth callback page loaded')
+    console.log('🔍 [Callback] Current URL:', window.location.href)
+    console.log('📋 [Callback] URL parameters:', {
+      error: searchParams.get('error'),
+      errorDescription: searchParams.get('error_description'),
+      code: searchParams.get('code'),
+      state: searchParams.get('state'),
+      redirectTo: searchParams.get('redirectTo')
+    })
+
+    // Prevent multiple redirect attempts
+    if (redirectAttempted) {
+      console.log('⏸️ [Callback] Redirect already attempted, skipping')
+      return
+    }
+
+    // Check if there's an error in the URL
+    const error = searchParams.get('error')
+    const errorDescription = searchParams.get('error_description')
+
+    if (error) {
+      console.error('❌ [Callback] OAuth error received:', {
+        error,
+        errorDescription,
+        fullErrorParams: Object.fromEntries(searchParams.entries())
+      })
+
+      console.log('🔙 [Callback] Redirecting to login page with error')
+      setRedirectAttempted(true)
+      router.push('/auth/login?error=' + encodeURIComponent(errorDescription || error))
+      return
+    }
+
+    // Wait for auth state to be determined
+    if (!loading) {
+      console.log('🎯 [Callback] Auth state determined, checking user status:', {
+        loading,
+        hasUser: !!user,
+        userId: user?.id,
+        email: user?.email,
+        provider: user?.app_metadata?.provider
+      })
+
+      if (user) {
+        console.log('🎉 [Callback] User authentication successful!', {
+          userId: user.id,
+          email: user.email,
+          provider: user.app_metadata?.provider,
+          metadata: user.user_metadata
+        })
+
+        if (!isProcessing) {
+          setIsProcessing(true)
+          setRedirectAttempted(true)
+
+          // User is authenticated, redirect to dashboard or intended page
+          const redirectTo = searchParams.get('redirectTo') || '/dashboard'
+          console.log('🔙 [Callback] Redirecting authenticated user to:', redirectTo)
+
+          // Immediate redirect without delay
+          router.push(redirectTo)
+        }
+      } else {
+        // Give more time for session to be established
+        if (!isProcessing) {
+          console.log('⏳ [Callback] No user found yet, waiting longer for session...')
+          setIsProcessing(true)
+
+          // Wait a bit longer for session to be established
+          const timeout = setTimeout(() => {
+            console.log('⏰ [Callback] Timeout reached, checking user status again')
+
+            if (user) {
+              const redirectTo = searchParams.get('redirectTo') || '/dashboard'
+              console.log('🔙 [Callback] Delayed redirect to:', redirectTo)
+              setRedirectAttempted(true)
+              router.push(redirectTo)
+            } else {
+              console.error('💔 [Callback] Authentication failed - no user found after timeout')
+              console.log('🔙 [Callback] Redirecting to login page with failure message')
+              setRedirectAttempted(true)
+              router.push('/auth/login?error=' + encodeURIComponent('Authentication failed - no user session created'))
+            }
+          }, 2000)
+
+          return () => clearTimeout(timeout)
+        }
+      }
+    } else {
+      console.log('⏳ [Callback] Still loading auth state, waiting...')
+    }
+  }, [user, loading, router, searchParams, isProcessing, redirectAttempted])
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+        <p className="text-muted-foreground">正在完成登录...</p>
+        <p className="text-xs text-muted-foreground mt-2">请查看控制台日志了解认证进度</p>
+      </div>
+    </div>
+  )
+}

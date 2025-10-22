@@ -4,6 +4,7 @@ import './globals.css'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
 import { AuthProvider } from '@/contexts/auth-context'
+import { DebugTools } from '@/components/debug/debug-tools'
 import { Toaster } from 'react-hot-toast'
 
 const inter = Inter({ subsets: ['latin'] })
@@ -40,7 +41,21 @@ export default function RootLayout({
               },
             }}
           />
+          <Toaster
+            position="top-right"
+            toastOptions={{
+              duration: 4000,
+              style: {
+                background: 'hsl(var(--card))',
+                color: 'hsl(var(--card-foreground))',
+                border: '1px solid hsl(var(--border))',
+              },
+            }}
+          />
         </AuthProvider>
+
+        {/* 调试工具 */}
+        <DebugTools />
       </body>
     </html>
   )
