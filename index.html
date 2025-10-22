@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>时间管理 - Time Management System</title>
+    <link rel="stylesheet" href="src/css/main.css">
+    <link rel="stylesheet" href="src/css/components.css">
+    <link rel="stylesheet" href="src/css/animations.css">
+</head>
+<body>
+    <header class="header">
+        <nav class="nav" role="navigation" aria-label="主导航">
+            <h1 class="nav__logo">时间管理</h1>
+            <ul class="nav__menu">
+                <li class="nav__item">
+                    <button class="nav__link active" data-section="dashboard" aria-current="page">概览</button>
+                </li>
+                <li class="nav__item">
+                    <button class="nav__link" data-section="sleep">睡眠记录</button>
+                </li>
+                <li class="nav__item">
+                    <button class="nav__link" data-section="activities">活动记录</button>
+                </li>
+                <li class="nav__item">
+                    <button class="nav__link" data-section="statistics">统计分析</button>
+                </li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="main">
+        <!-- Dashboard Section -->
+        <section id="dashboard" class="section active">
+            <h2>今日概览</h2>
+            <div class="dashboard-grid">
+                <div class="card">
+                    <h3>睡眠状态</h3>
+                    <div id="sleep-status" class="status-display">
+                        <p>今日睡眠记录待更新</p>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3>工作时长</h3>
+                    <div id="work-time" class="time-display">
+                        <span class="time-value">0</span>
+                        <span class="time-unit">小时</span>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3>空闲时长</h3>
+                    <div id="free-time" class="time-display">
+                        <span class="time-value">0</span>
+                        <span class="time-unit">小时</span>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3>今日进度</h3>
+                    <div id="daily-progress" class="progress-display">
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 0%"></div>
+                        </div>
+                        <p class="progress-text">0% 完成</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="quick-actions">
+                <button class="btn btn-primary" id="quick-wake">记录起床</button>
+                <button class="btn btn-secondary" id="quick-sleep">记录睡觉</button>
+                <button class="btn btn-primary" id="quick-activity">记录活动</button>
+            </div>
+        </section>
+
+        <!-- Sleep Tracking Section -->
+        <section id="sleep" class="section">
+            <h2>睡眠记录</h2>
+            <div class="sleep-tracker">
+                <div class="card">
+                    <h3>记录睡眠时间</h3>
+                    <form id="sleep-form" class="form">
+                        <div class="form-group">
+                            <label for="sleep-date">日期</label>
+                            <input type="date" id="sleep-date" class="form-input" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="wake-time">起床时间</label>
+                            <div class="time-input-group">
+                                <input type="time" id="wake-time" class="form-input" required>
+                                <div class="time-slider-container" id="wake-time-slider">
+                                    <input type="range" id="wake-time-range" class="time-slider" min="0" max="1439" step="15">
+                                    <div class="time-preview" id="wake-preview">06:00</div>
+                                </div>
+                            </div>
+                            <div class="quick-time-buttons" id="wake-quick-times">
+                                <button type="button" class="btn-quick-time" data-time="05:00">5:00</button>
+                                <button type="button" class="btn-quick-time" data-time="06:00">6:00</button>
+                                <button type="button" class="btn-quick-time" data-time="06:30">6:30</button>
+                                <button type="button" class="btn-quick-time" data-time="07:00">7:00</button>
+                                <button type="button" class="btn-quick-time" data-time="07:30">7:30</button>
+                                <button type="button" class="btn-quick-time" data-time="08:00">8:00</button>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="sleep-time">睡觉时间</label>
+                            <div class="time-input-group">
+                                <input type="time" id="sleep-time" class="form-input" required>
+                                <div class="time-slider-container" id="sleep-time-slider">
+                                    <input type="range" id="sleep-time-range" class="time-slider" min="0" max="1439" step="15">
+                                    <div class="time-preview" id="sleep-preview">22:00</div>
+                                </div>
+                            </div>
+                            <div class="quick-time-buttons" id="sleep-quick-times">
+                                <button type="button" class="btn-quick-time" data-time="21:00">21:00</button>
+                                <button type="button" class="btn-quick-time" data-time="22:00">22:00</button>
+                                <button type="button" class="btn-quick-time" data-time="22:30">22:30</button>
+                                <button type="button" class="btn-quick-time" data-time="23:00">23:00</button>
+                                <button type="button" class="btn-quick-time" data-time="23:30">23:30</button>
+                                <button type="button" class="btn-quick-time" data-time="00:00">00:00</button>
+                            </div>
+                        </div>
+
+                        <div class="sleep-duration-display">
+                            <label>睡眠时长</label>
+                            <div class="duration-preview" id="sleep-duration-preview">
+                                <span class="duration-value">8小时0分钟</span>
+                            </div>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-secondary" id="sleep-reset-btn">重置</button>
+                            <button type="submit" class="btn btn-primary" id="sleep-save-btn">保存记录</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <h3>本周睡眠历史</h3>
+                    <div style="margin-bottom: 1rem; text-align: right;">
+                        <button class="btn btn-small btn-secondary" onclick="undoLastSleepAction()" title="撤销上次修改">
+                            ↶ 撤销
+                        </button>
+                    </div>
+                    <div id="sleep-history" class="history-list">
+                        <p>暂无睡眠记录</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Activities Section -->
+        <section id="activities" class="section">
+            <h2>活动记录</h2>
+            <div class="activity-tracker">
+                <div class="card">
+                    <h3>记录新活动</h3>
+                    <form id="activity-form" class="form">
+                        <div class="form-group">
+                            <label for="activity-name">活动名称</label>
+                            <input type="text" id="activity-name" class="form-input" placeholder="例如：编程、读书、运动" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="activity-category">活动类别</label>
+                            <select id="activity-category" class="form-select" required>
+                                <option value="">选择类别</option>
+                                <option value="work">工作</option>
+                                <option value="personal">个人</option>
+                                <option value="leisure">休闲</option>
+                                <option value="exercise">运动</option>
+                                <option value="learning">学习</option>
+                                <option value="other">其他</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="activity-start">开始时间</label>
+                            <input type="datetime-local" id="activity-start" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="activity-end">结束时间</label>
+                            <input type="datetime-local" id="activity-end" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="activity-description">描述</label>
+                            <textarea id="activity-description" class="form-textarea" rows="3" placeholder="活动详细描述（可选）"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">保存活动</button>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <h3>今日活动</h3>
+                    <div id="today-activities" class="activity-list">
+                        <p>暂无活动记录</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Statistics Section -->
+        <section id="statistics" class="section">
+            <h2>统计分析</h2>
+            <div class="statistics-grid">
+                <div class="card">
+                    <h3>时间分布</h3>
+                    <div id="time-distribution" class="chart-container">
+                        <p>需要更多数据来生成图表</p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>本周趋势</h3>
+                    <div id="weekly-trends" class="chart-container">
+                        <p>需要更多数据来生成图表</p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>目标进度</h3>
+                    <div id="goal-progress" class="goals-list">
+                        <div class="goal-item">
+                            <span>每日工作目标</span>
+                            <div class="mini-progress">
+                                <div class="mini-progress-fill" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>数据导出</h3>
+                    <div class="export-options">
+                        <button class="btn btn-secondary" id="export-csv">导出 CSV</button>
+                        <button class="btn btn-secondary" id="export-report">生成报告</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <p>&copy; 2024 时间管理系统 - Time Management System</p>
+    </footer>
+
+    <script src="src/js/storage.js"></script>
+    <script src="src/js/utils.js"></script>
+    <script src="src/js/components.js"></script>
+    <script src="src/js/sleep-tracker.js"></script>
+    <script src="src/js/activity-tracker.js"></script>
+    <script src="src/js/statistics.js"></script>
+    <script src="src/js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>时间管理系统 - 调试页面</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .log { background: #f5f5f5; padding: 10px; margin: 10px 0; border-radius: 5px; font-family: monospace; }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+        button { padding: 10px 20px; margin: 5px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>时间管理系统 - 调试工具</h1>
+    <div id="logs"></div>
+    <button onclick="testStorage()">测试存储模块</button>
+    <button onclick="testApp()">测试应用初始化</button>
+    <button onclick="goToApp()">前往主应用</button>
+
+    <script src="src/js/storage.js"></script>
+    <script src="src/js/utils.js"></script>
+    <script src="src/js/components.js"></script>
+    <script>
+        const logs = document.getElementById('logs');
+
+        function log(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `log ${type}`;
+            div.innerHTML = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logs.appendChild(div);
+            console.log(message);
+        }
+
+        function testStorage() {
+            log('🔍 开始测试存储模块...', 'info');
+
+            if (typeof window.storage !== 'undefined') {
+                log('✅ Storage 模块已加载', 'success');
+
+                try {
+                    // Test adding a sleep record
+                    const testRecord = {
+                        date: '2024-01-01',
+                        wakeTime: '07:00',
+                        sleepTime: '23:00'
+                    };
+
+                    const added = storage.addSleepRecord(testRecord);
+                    if (added) {
+                        log(`✅ 成功添加睡眠记录: ID ${added.id}, 时长 ${added.duration}小时`, 'success');
+
+                        // Test retrieving data
+                        const sleepData = storage.getSleepData();
+                        log(`📊 当前睡眠记录数量: ${sleepData.length}`, 'info');
+
+                        // Clean up
+                        storage.deleteSleepRecord(added.id);
+                        log('🧹 清理测试数据完成', 'info');
+                    } else {
+                        log('❌ 添加睡眠记录失败', 'error');
+                    }
+                } catch (error) {
+                    log(`❌ Storage 测试失败: ${error.message}`, 'error');
+                }
+            } else {
+                log('❌ Storage 模块未加载', 'error');
+            }
+        }
+
+        function testApp() {
+            log('🚀 开始测试应用初始化...', 'info');
+
+            if (typeof window.storage !== 'undefined' && typeof window.Utils !== 'undefined') {
+                log('✅ 所有必需模块已加载', 'success');
+
+                // Simulate app initialization
+                try {
+                    log('🔍 检查数据结构...', 'info');
+                    const sleepData = storage.getSleepData();
+                    const activityData = storage.getActivityData();
+                    const goals = storage.getGoals();
+                    const preferences = storage.getPreferences();
+
+                    log(`📊 数据状态: 睡眠 ${sleepData.length} 条, 活动 ${activityData.length} 条`, 'info');
+                    log(`🎯 目标: ${Object.keys(goals).length} 项, 偏好: ${Object.keys(preferences).length} 项`, 'info');
+
+                    log('✅ 应用初始化测试通过', 'success');
+                } catch (error) {
+                    log(`❌ 应用初始化测试失败: ${error.message}`, 'error');
+                }
+            } else {
+                log('❌ 模块加载不完整', 'error');
+                log(`Storage: ${typeof window.storage}`, 'info');
+                log(`Utils: ${typeof window.Utils}`, 'info');
+            }
+        }
+
+        function goToApp() {
+            window.location.href = 'index.html';
+        }
+
+        // Auto-run basic tests
+        setTimeout(() => {
+            log('🔧 自动开始基础测试...', 'info');
+            testStorage();
+            setTimeout(testApp, 1000);
+        }, 500);
+    </script>
+</body>
+</html>

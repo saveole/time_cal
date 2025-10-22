@@ -1,0 +1,17 @@
+{
+  "name": "time-cal",
+  "version": "1.0.0",
+  "description": "A comprehensive time management system for tracking daily schedules, activities, and productivity",
+  "main": "index.html",
+  "scripts": {
+    "start": "python3 -m http.server 8000",
+    "dev": "python3 -m http.server 8000",
+    "build": "echo 'Build completed - static files ready'",
+    "test": "echo 'No tests specified yet'"
+  },
+  "keywords": ["time-management", "productivity", "tracking", "schedule"],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {},
+  "dependencies": {}
+}
