@@ -11,6 +11,9 @@ export type Database = {
           full_name: string | null
           avatar_url: string | null
           timezone: string
+          github_username: string | null
+          github_id: number | null
+          auth_provider: 'email' | 'github' | null
           created_at: string
           updated_at: string
         }
@@ -20,12 +23,18 @@ export type Database = {
           full_name?: string | null
           avatar_url?: string | null
           timezone?: string
+          github_username?: string | null
+          github_id?: number | null
+          auth_provider?: 'email' | 'github' | null
         }
         Update: {
           email?: string | null
           full_name?: string | null
           avatar_url?: string | null
           timezone?: string
+          github_username?: string | null
+          github_id?: number | null
+          auth_provider?: 'email' | 'github' | null
         }
       }
       sleep_records: {

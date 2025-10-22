@@ -6,30 +6,100 @@ export async function middleware(req: NextRequest) {
   const res = NextResponse.next()
   const supabase = createMiddlewareClient({ req, res })
 
+  // Enable debug mode for middleware in development
+  const isDevelopment = process.env.NODE_ENV === 'development'
+
+  // Define protected routes and auth routes
+  const protectedRoutes = ['/dashboard', '/sleep', '/activities', '/statistics', '/migration']
+  const authRoutes = ['/auth/login']
+  const publicRoutes = ['/', '/auth/reset-password', '/auth/callback']
+
+  const { pathname } = req.nextUrl
+
+  if (isDevelopment) {
+    console.log('🛡️ [Middleware] Processing request:', {
+      method: req.method,
+      pathname,
+      userAgent: req.headers.get('user-agent'),
+      timestamp: new Date().toISOString()
+    })
+  }
+
   // Refresh session if expired - required for Server Components
   // https://supabase.com/docs/guides/auth/auth-helpers/nextjs#managing-session-with-middleware
   const {
     data: { session },
+    error: sessionError
   } = await supabase.auth.getSession()
 
-  // Define protected routes and auth routes
-  const protectedRoutes = ['/dashboard', '/sleep', '/activities', '/statistics', '/migration']
-  const authRoutes = ['/auth/login', '/auth/register']
-  const publicRoutes = ['/', '/auth/forgot-password', '/auth/reset-password']
+  if (sessionError) {
+    console.error('❌ [Middleware] Error getting session:', {
+      error: sessionError.message,
+      pathname
+    })
+  }
 
-  const { pathname } = req.nextUrl
+  if (isDevelopment) {
+    console.log('🔐 [Middleware] Session status:', {
+      hasSession: !!session,
+      userId: session?.user?.id,
+      email: session?.user?.email,
+      provider: session?.user?.app_metadata?.provider,
+      sessionValid: !!session && !!session.user,
+      pathname
+    })
+  }
+
+  // Enhanced session validation
+  const isValidSession = session && session.user && session.access_token
 
   // If user is not signed in and accessing protected route, redirect to login
-  if (!session && protectedRoutes.some(route => pathname.startsWith(route))) {
+  if (!isValidSession && protectedRoutes.some(route => pathname.startsWith(route))) {
+    if (isDevelopment) {
+      console.log('🚫 [Middleware] Unauthenticated user accessing protected route:', {
+        pathname,
+        redirectTo: '/auth/login',
+        hasSession: !!session,
+        hasUser: !!session?.user,
+        hasToken: !!session?.access_token
+      })
+    }
+
     const redirectUrl = new URL('/auth/login', req.url)
     redirectUrl.searchParams.set('redirectTo', pathname)
+
+    if (isDevelopment) {
+      console.log('🔙 [Middleware] Redirecting to login with redirectTo parameter')
+    }
     return NextResponse.redirect(redirectUrl)
   }
 
   // If user is signed in and accessing auth route, redirect to dashboard
-  if (session && authRoutes.some(route => pathname.startsWith(route))) {
+  if (isValidSession && authRoutes.some(route => pathname.startsWith(route))) {
+    if (isDevelopment) {
+      console.log('✅ [Middleware] Authenticated user accessing auth route:', {
+        pathname,
+        userId: session.user.id,
+        redirectTo: '/dashboard'
+      })
+    }
+
+    if (isDevelopment) {
+      console.log('🔙 [Middleware] Redirecting authenticated user to dashboard')
+    }
     return NextResponse.redirect(new URL('/dashboard', req.url))
   }
+
+  // Special handling for auth callback
+  if (pathname === '/auth/callback') {
+    console.log('🔄 [Middleware] Auth callback request - allowing to proceed')
+    return NextResponse.next()
+  }
+
+  console.log('✅ [Middleware] Request allowed to proceed:', {
+    pathname,
+    hasSession: !!session
+  })
 
   // Add security headers
   const response = NextResponse.next()

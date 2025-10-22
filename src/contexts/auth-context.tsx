@@ -3,13 +3,14 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
 import { User, Session } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
+import { authLogger } from '@/lib/auth-logger'
 
 type AuthContextType = {
   user: User | null
   session: Session | null
   loading: boolean
   signIn: (email: string, password: string) => Promise<{ error: any }>
-  signUp: (email: string, password: string) => Promise<{ error: any }>
+  signInWithGitHub: () => Promise<{ error: any }>
   signOut: () => Promise<void>
   resetPassword: (email: string) => Promise<{ error: any }>
   updatePassword: (newPassword: string) => Promise<{ error: any }>
@@ -23,33 +24,128 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    console.log('🚀 [Auth] Initializing AuthContext')
+
     // Get initial session
     const getInitialSession = async () => {
-      const { data: { session }, error } = await supabase.auth.getSession()
+      console.log('🔍 [Auth] Checking for existing session...')
 
-      if (error) {
-        console.error('Error getting initial session:', error)
-      } else {
-        setSession(session)
-        setUser(session?.user ?? null)
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession()
+
+        if (error) {
+          console.error('❌ [Auth] Error getting initial session:', {
+            error: error.message,
+            code: error.status
+          })
+        } else {
+          console.log('✅ [Auth] Initial session retrieved:', {
+            hasSession: !!session,
+            userId: session?.user?.id,
+            email: session?.user?.email,
+            provider: session?.user?.app_metadata?.provider,
+            sessionValid: !!session && !!session.user
+          })
+
+          // Only set user if session is valid
+          if (session && session.user) {
+            setSession(session)
+            setUser(session.user)
+            console.log('👤 [Auth] User state set from session:', {
+              userId: session.user.id,
+              email: session.user.email
+            })
+          } else {
+            console.log('🚫 [Auth] No valid session found, clearing user state')
+            setSession(null)
+            setUser(null)
+          }
+        }
+      } catch (error) {
+        console.error('💥 [Auth] Unexpected error during session check:', error)
+        setSession(null)
+        setUser(null)
       }
 
+      console.log('⏳ [Auth] Initial session check completed, setting loading to false')
       setLoading(false)
     }
 
     getInitialSession()
 
     // Listen for auth changes
+    console.log('👂 [Auth] Setting up auth state change listener')
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('Auth state changed:', event, session)
-      setSession(session)
-      setUser(session?.user ?? null)
+      console.log('🔄 [Auth] Auth state changed:', {
+        event,
+        hasSession: !!session,
+        userId: session?.user?.id,
+        email: session?.user?.email,
+        provider: session?.user?.app_metadata?.provider,
+        timestamp: new Date().toISOString()
+      })
+
+      // Log specific events with more details
+      switch (event) {
+        case 'SIGNED_IN':
+          authLogger.authFlowSuccess(
+            session?.user?.app_metadata?.provider || 'unknown',
+            session?.user?.id || 'unknown',
+            {
+              email: session?.user?.email,
+              provider: session?.user?.app_metadata?.provider,
+              isNewUser: !session?.user?.last_sign_in_at ||
+                       (new Date(session.user.last_sign_in_at).getTime() === new Date(session.user.created_at).getTime())
+            }
+          )
+          if (session && session.user) {
+            setSession(session)
+            setUser(session.user)
+          }
+          break
+
+        case 'SIGNED_OUT':
+          authLogger.sessionStateChanged('SIGNED_OUT', session)
+          setSession(null)
+          setUser(null)
+          break
+
+        case 'TOKEN_REFRESHED':
+          authLogger.sessionStateChanged('TOKEN_REFRESHED', session)
+          if (session && session.user) {
+            setSession(session)
+            setUser(session.user)
+          }
+          break
+
+        case 'USER_UPDATED':
+          authLogger.sessionStateChanged('USER_UPDATED', session)
+          if (session && session.user) {
+            setSession(session)
+            setUser(session.user)
+          }
+          break
+
+        default:
+          authLogger.sessionStateChanged(event, session)
+          if (session && session.user) {
+            setSession(session)
+            setUser(session.user)
+          } else {
+            setSession(null)
+            setUser(null)
+          }
+      }
+
       setLoading(false)
     })
 
-    return () => subscription.unsubscribe()
+    return () => {
+      console.log('🔇 [Auth] Cleaning up auth state listener')
+      subscription.unsubscribe()
+    }
   }, [])
 
   const signIn = async (email: string, password: string) => {
@@ -65,15 +161,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const signUp = async (email: string, password: string) => {
+  const signInWithGitHub = async () => {
+    authLogger.authFlowStart('github', {
+      pathname: window.location.pathname,
+      timestamp: new Date().toISOString()
+    })
+
     try {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'github',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
       })
-      return { error }
+
+      if (error) {
+        authLogger.authFlowError('github', error, {
+          pathname: window.location.pathname
+        })
+        return { error }
+      }
+
+      if (data?.url) {
+        authLogger.oauthUrlGenerated(data.url, 'github')
+        authLogger.userInteraction('redirect_to_github', {
+          pathname: window.location.pathname
+        })
+      }
+
+      return { error: null }
     } catch (error) {
-      console.error('Sign up error:', error)
+      authLogger.authFlowError('github', error, {
+        pathname: window.location.pathname
+      })
       return { error }
     }
   }
@@ -115,7 +235,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     session,
     loading,
     signIn,
-    signUp,
+    signInWithGitHub,
     signOut,
     resetPassword,
     updatePassword,
