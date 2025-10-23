@@ -203,16 +203,12 @@ export async function GET(request: NextRequest) {
     // 生成 JWT
     const jwtToken = generateJWT(user)
 
-    // 在安全的 HTTP-only Cookie 中设置 JWT 令牌
-    const response = NextResponse.redirect(`${BASE_URL}`)
+    console.log('✅ [API] Generated JWT for user:', user.github_username)
 
-    response.cookies.set('auth_token', jwtToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 24 * 60 * 60, // 24 小时
-      path: '/',
-    })
+    // 重定向到客户端回调页面，将 token 作为 URL 参数传递
+    // 注意：这是一种临时传输方式，客户端应立即将 token 存储到 localStorage
+    const callbackUrl = `${BASE_URL}/auth/callback?token=${encodeURIComponent(jwtToken)}`
+    const response = NextResponse.redirect(callbackUrl)
 
     // 清除 OAuth cookies
     response.cookies.delete('oauth_session')

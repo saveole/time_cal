@@ -4,6 +4,7 @@ import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Loader2, CheckCircle, XCircle } from 'lucide-react'
+import { tokenStorage } from '@/lib/token-storage'
 
 function AuthCallbackPageContent() {
   const router = useRouter()
@@ -13,6 +14,7 @@ function AuthCallbackPageContent() {
 
   useEffect(() => {
     const error = searchParams.get('error')
+    const token = searchParams.get('token')
 
     if (error) {
       setStatus('error')
@@ -23,38 +25,81 @@ function AuthCallbackPageContent() {
       return
     }
 
-    // The actual OAuth flow is handled by the API route
-    // This page is just a loading state while the API processes the callback
-    const timer = setTimeout(() => {
-      // Check if authentication was successful by trying to access user data
-      fetch('/api/auth/me', {
-        credentials: 'include'
-      })
-      .then(response => {
-        if (response.ok) {
-          setStatus('success')
-          setMessage('认证成功！正在跳转到控制台...')
-          setTimeout(() => {
-            router.push('/dashboard')
-          }, 1500)
-        } else {
+    if (token) {
+      try {
+        console.log('🔑 [Callback] Received token, storing in localStorage')
+
+        // Store the token in localStorage
+        tokenStorage.setToken(token)
+
+        // Verify the token works by calling /api/auth/me
+        fetch('/api/auth/me', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        })
+        .then(response => {
+          if (response.ok) {
+            setStatus('success')
+            setMessage('认证成功！正在跳转到控制台...')
+            console.log('✅ [Callback] Token validated successfully')
+
+            // Redirect to dashboard after a short delay
+            setTimeout(() => {
+              router.push('/sleep')
+            }, 1500)
+          } else {
+            setStatus('error')
+            setMessage('令牌验证失败，请重试')
+            console.error('❌ [Callback] Token validation failed')
+            tokenStorage.clearToken()
+            setTimeout(() => {
+              router.push('/auth/login')
+            }, 3000)
+          }
+        })
+        .catch((error) => {
           setStatus('error')
-          setMessage('认证失败，请重试')
+          setMessage('网络错误，请检查连接后重试')
+          console.error('💥 [Callback] Network error during validation:', error)
+          tokenStorage.clearToken()
           setTimeout(() => {
             router.push('/auth/login')
           }, 3000)
-        }
-      })
-      .catch(() => {
+        })
+      } catch (error) {
         setStatus('error')
-        setMessage('网络错误，请检查连接后重试')
+        setMessage('令牌处理失败，请重试')
+        console.error('💥 [Callback] Token processing error:', error)
         setTimeout(() => {
           router.push('/auth/login')
         }, 3000)
-      })
-    }, 2000) // Give time for OAuth callback processing
+      }
+    } else {
+      // No token and no error - probably a direct access or session check
+      setStatus('loading')
+      setMessage('正在检查现有认证状态...')
 
-    return () => clearTimeout(timer)
+      // Check if we already have a valid token in localStorage
+      const timer = setTimeout(() => {
+        if (tokenStorage.hasToken() && !tokenStorage.isTokenExpired()) {
+          setStatus('success')
+          setMessage('已认证！正在跳转到控制台...')
+          setTimeout(() => {
+            router.push('/sleep')
+          }, 1000)
+        } else {
+          setStatus('error')
+          setMessage('未找到有效认证信息')
+          setTimeout(() => {
+            router.push('/auth/login')
+          }, 2000)
+        }
+      }, 1000)
+
+      return () => clearTimeout(timer)
+    }
   }, [router, searchParams])
 
   const getIcon = () => {
