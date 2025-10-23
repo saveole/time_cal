@@ -153,8 +153,8 @@ function isValidJWTFormat(token: string): boolean {
     const payload = JSON.parse(atob(parts[1]))
 
     // Basic structure validation
-    return header.alg && header.typ === 'JWT' &&
-           payload.userId && payload.githubId && payload.exp
+    return !!(header.alg && header.typ === 'JWT' &&
+           payload.userId && payload.githubId && payload.exp)
   } catch (error) {
     return false
   }
