@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { DebugAuthLogger } from './auth-log-viewer'
+import { AuthLogViewer } from './auth-log-viewer'
 import { SessionDebugger } from './session-debugger'
 
 export function DebugTools() {
@@ -16,7 +16,7 @@ export function DebugTools() {
   return (
     <>
       {/* Auth Logger - 始终显示 */}
-      {showAuthLogger && <DebugAuthLogger />}
+      {showAuthLogger && <AuthLogViewer />}
 
       {/* Session Debugger - 按需显示 */}
       {showSessionDebugger && <SessionDebugger />}

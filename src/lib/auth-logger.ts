@@ -88,7 +88,7 @@ class AuthLogger {
       error: '❌',
       debug: '🔍'
     }
-    return emojis[level] || '📝'
+    return (emojis as any)[level] || '📝'
   }
 
   /**

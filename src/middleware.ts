@@ -1,15 +1,12 @@
-import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { verifyJWT, extractUserFromRequest, User } from '@/lib/auth'
 
 export async function middleware(req: NextRequest) {
-  const res = NextResponse.next()
-  const supabase = createMiddlewareClient({ req, res })
-
-  // Enable debug mode for middleware in development
+  // 在开发环境中启用中间件调试模式
   const isDevelopment = process.env.NODE_ENV === 'development'
 
-  // Define protected routes and auth routes
+  // 定义受保护的路由和认证路由
   const protectedRoutes = ['/dashboard', '/sleep', '/activities', '/statistics', '/migration']
   const authRoutes = ['/auth/login']
   const publicRoutes = ['/', '/auth/reset-password', '/auth/callback']
@@ -25,43 +22,26 @@ export async function middleware(req: NextRequest) {
     })
   }
 
-  // Refresh session if expired - required for Server Components
-  // https://supabase.com/docs/guides/auth/auth-helpers/nextjs#managing-session-with-middleware
-  const {
-    data: { session },
-    error: sessionError
-  } = await supabase.auth.getSession()
-
-  if (sessionError) {
-    console.error('❌ [Middleware] Error getting session:', {
-      error: sessionError.message,
-      pathname
-    })
-  }
+  // 从 JWT 令牌中提取用户
+  const user = extractUserFromRequest(req)
+  const isValidSession = !!user
 
   if (isDevelopment) {
-    console.log('🔐 [Middleware] Session status:', {
-      hasSession: !!session,
-      userId: session?.user?.id,
-      email: session?.user?.email,
-      provider: session?.user?.app_metadata?.provider,
-      sessionValid: !!session && !!session.user,
+    console.log('🔐 [Middleware] JWT Session status:', {
+      hasSession: isValidSession,
+      userId: user?.id,
+      githubUsername: user?.githubUsername,
       pathname
     })
   }
 
-  // Enhanced session validation
-  const isValidSession = session && session.user && session.access_token
-
-  // If user is not signed in and accessing protected route, redirect to login
+  // 如果用户未登录且访问受保护的路由，重定向到登录页
   if (!isValidSession && protectedRoutes.some(route => pathname.startsWith(route))) {
     if (isDevelopment) {
       console.log('🚫 [Middleware] Unauthenticated user accessing protected route:', {
         pathname,
         redirectTo: '/auth/login',
-        hasSession: !!session,
-        hasUser: !!session?.user,
-        hasToken: !!session?.access_token
+        hasUser: !!user
       })
     }
 
@@ -74,12 +54,12 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(redirectUrl)
   }
 
-  // If user is signed in and accessing auth route, redirect to dashboard
+  // 如果用户已登录且访问认证路由，重定向到仪表板
   if (isValidSession && authRoutes.some(route => pathname.startsWith(route))) {
     if (isDevelopment) {
       console.log('✅ [Middleware] Authenticated user accessing auth route:', {
         pathname,
-        userId: session.user.id,
+        userId: user.id,
         redirectTo: '/dashboard'
       })
     }
@@ -90,21 +70,25 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL('/dashboard', req.url))
   }
 
-  // Special handling for auth callback
-  if (pathname === '/auth/callback') {
-    console.log('🔄 [Middleware] Auth callback request - allowing to proceed')
+  // 对认证回调和 API 路由进行特殊处理
+  if (pathname === '/auth/callback' || pathname.startsWith('/api/auth/')) {
+    if (isDevelopment) {
+      console.log('🔄 [Middleware] Auth request - allowing to proceed:', { pathname })
+    }
     return NextResponse.next()
   }
 
-  console.log('✅ [Middleware] Request allowed to proceed:', {
-    pathname,
-    hasSession: !!session
-  })
+  if (isDevelopment) {
+    console.log('✅ [Middleware] Request allowed to proceed:', {
+      pathname,
+      hasSession: isValidSession
+    })
+  }
 
-  // Add security headers
+  // 添加安全头部
   const response = NextResponse.next()
 
-  // Security headers
+  // 安全头部
   response.headers.set('X-Frame-Options', 'DENY')
   response.headers.set('X-Content-Type-Options', 'nosniff')
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
@@ -119,11 +103,11 @@ export async function middleware(req: NextRequest) {
 export const config = {
   matcher: [
     /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * Feel free to modify this pattern to include more paths.
+     * 匹配所有请求路径，除了以下开头的路径：
+     * - _next/static (静态文件)
+     * - _next/image (图片优化文件)
+     * - favicon.ico (网站图标文件)
+     * 可以随意修改此模式以包含更多路径。
      */
     '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
