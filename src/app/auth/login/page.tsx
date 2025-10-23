@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useAuth } from '@/contexts/auth-context'
 import { Github } from 'lucide-react'
 
-export default function LoginPage() {
+function LoginPageContent() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const { signInWithGitHub } = useAuth()
@@ -73,8 +73,8 @@ export default function LoginPage() {
     } catch (unexpectedError) {
       console.error('💥 [Login] Unexpected error during GitHub sign in:', {
         error: unexpectedError,
-        message: unexpectedError.message,
-        stack: unexpectedError.stack
+        message: unexpectedError instanceof Error ? unexpectedError.message : 'Unknown error',
+        stack: unexpectedError instanceof Error ? unexpectedError.stack : undefined
       })
       setError('登录过程中发生意外错误，请重试')
       setLoading(false)
@@ -113,13 +113,20 @@ export default function LoginPage() {
             您将重定向到 GitHub 进行身份验证
           </div>
 
-          <div className="mt-4 text-center text-sm">
-            <Link href="/auth/reset-password" className="text-primary hover:underline">
-              忘记密码？
-            </Link>
-          </div>
-        </CardContent>
+          </CardContent>
       </Card>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center">Loading...</div>
+      </div>
+    }>
+      <LoginPageContent />
+    </Suspense>
   )
 }

@@ -61,7 +61,7 @@ export function Header() {
                 {user ? (
                   <div className="flex items-center space-x-2">
                     <span className="text-sm text-muted-foreground">
-                      {user.email}
+                      {user.name || user.githubUsername}
                     </span>
                     <Button variant="outline" size="sm" onClick={handleSignOut}>
                       登出
