@@ -35,20 +35,44 @@ export function verifyJWT(token: string): JWTPayload | null {
 }
 
 export function extractUserFromRequest(request: Request): User | null {
-  const cookieHeader = request.headers.get('cookie')
-  if (!cookieHeader) return null
+  let token: string | null = null
 
-  const cookies = cookieHeader.split(';').reduce((acc, cookie) => {
-    const [name, value] = cookie.trim().split('=')
-    acc[name] = value
-    return acc
-  }, {} as Record<string, string>)
+  // First, try to extract token from Authorization header (Bearer token)
+  const authHeader = request.headers.get('authorization')
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    token = authHeader.substring(7)
+    console.log('🔑 [Auth] Extracted Bearer token from Authorization header')
+  }
 
-  const token = cookies['auth_token']
-  if (!token) return null
+  // Fallback to cookie-based authentication for backward compatibility
+  if (!token) {
+    const cookieHeader = request.headers.get('cookie')
+    if (cookieHeader) {
+      const cookies = cookieHeader.split(';').reduce((acc, cookie) => {
+        const [name, value] = cookie.trim().split('=')
+        acc[name] = value
+        return acc
+      }, {} as Record<string, string>)
+
+      token = cookies['auth_token']
+      if (token) {
+        console.log('🍪 [Auth] Extracted token from cookie (fallback method)')
+      }
+    }
+  }
+
+  if (!token) {
+    console.log('🚫 [Auth] No authentication token found')
+    return null
+  }
 
   const payload = verifyJWT(token)
-  if (!payload) return null
+  if (!payload) {
+    console.log('❌ [Auth] Token verification failed')
+    return null
+  }
+
+  console.log('✅ [Auth] Token verified successfully for user:', payload.githubUsername)
 
   return {
     id: payload.userId,
