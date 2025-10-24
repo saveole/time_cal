@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import jwt from 'jsonwebtoken'
 import crypto from 'crypto'
 import { createProxyFetch, configureNodeProxy } from '@/lib/proxy-config'
+import { profileService } from '@/lib/database/profiles'
+import { supabase } from '@/lib/supabase'
 
 // 强制动态渲染
 export const dynamic = 'force-dynamic'
@@ -122,29 +124,45 @@ async function getGitHubUser(accessToken: string): Promise<GitHubUser> {
 }
 
 async function createOrUpdateUser(githubUser: GitHubUser) {
-  // 这里通常会使用你的数据库客户端
-  // 目前我们将模拟用户创建/更新逻辑
-  // 在实际实现中，你会在这里查询数据库
+  try {
+    // Check if user exists by GitHub ID
+    const existingProfile = await profileService.getProfileByGitHubId(githubUser.id)
 
-  const user = {
-    id: crypto.randomUUID(), // 生成或从数据库获取
-    github_id: githubUser.id,
-    github_username: githubUser.login,
-    email: githubUser.email,
-    name: githubUser.name || githubUser.login,
-    avatar_url: githubUser.avatar_url,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    last_login_at: new Date().toISOString(),
+    // Generate a UUID for the user if they don't exist
+    const userId = existingProfile?.id || crypto.randomUUID()
+
+    // Create or update profile with GitHub data
+    const profile = await profileService.createOrUpdateGitHubProfile(userId, {
+      github_username: githubUser.login,
+      github_id: githubUser.id,
+      auth_provider: 'github',
+      email: githubUser.email,
+      full_name: githubUser.name || githubUser.login,
+      avatar_url: githubUser.avatar_url,
+      timezone: 'UTC' // Default timezone, can be updated later
+    })
+
+    console.log('Profile created/updated successfully:', {
+      userId: profile.id,
+      githubUsername: profile.github_username,
+      authProvider: profile.auth_provider
+    })
+
+    return {
+      id: profile.id,
+      github_id: profile.github_id,
+      github_username: profile.github_username,
+      email: profile.email,
+      name: profile.full_name || profile.github_username,
+      avatar_url: profile.avatar_url,
+      created_at: profile.created_at,
+      updated_at: profile.updated_at,
+      last_login_at: new Date().toISOString(),
+    }
+  } catch (error) {
+    console.error('Error creating/updating user profile:', error)
+    throw new Error('Failed to create or update user profile')
   }
-
-  // TODO: 实现实际的数据库操作
-  // - 通过 github_id 检查用户是否存在
-  // - 如果不存在则创建新用户
-  // - 用最新的 GitHub 数据更新现有用户
-  // - 更新 last_login_at
-
-  return user
 }
 
 function generateJWT(user: any): string {

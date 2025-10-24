@@ -222,3 +222,43 @@ export type ActivityCategoryUpdate = Database['public']['Tables']['activity_cate
 export type ActivityUpdate = Database['public']['Tables']['activities']['Update']
 export type GoalUpdate = Database['public']['Tables']['goals']['Update']
 export type UserPreferencesUpdate = Database['public']['Tables']['user_preferences']['Update']
+
+// GitHub OAuth specific types
+export type GitHubProfileData = {
+  github_username?: string | null
+  github_id?: number | null
+  auth_provider?: 'github'
+  email?: string | null
+  full_name?: string | null
+  avatar_url?: string | null
+  timezone?: string
+}
+
+export type ProfileWithGitHub = Profile & {
+  github_username: string | null
+  github_id: number | null
+  auth_provider: 'email' | 'github' | null
+}
+
+// Goal progress types
+export type GoalProgress = {
+  goalId: string
+  targetHours: number
+  completedHours: number
+  percentage: number
+  isCompleted: boolean
+  daysRemaining: number
+}
+
+// User preference validation types
+export type ValidTheme = 'light' | 'dark' | 'system'
+export type ValidTimeFormat = '12h' | '24h'
+export type ValidLanguage = 'en' | 'zh' | 'es' | 'fr' | 'de' | 'ja'
+
+export type ValidatedUserPreferences = {
+  theme: ValidTheme
+  language: ValidLanguage
+  time_format: ValidTimeFormat
+  date_format: string
+  default_reminders: Record<string, any>
+}
