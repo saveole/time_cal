@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: timecal-postgres
+    environment:
+      POSTGRES_DB: timecal_db
+      POSTGRES_USER: timecal_user
+      POSTGRES_PASSWORD: timecal_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U timecal_user -d timecal_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: timecal-backend
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: timecal_user
+      DB_PASSWORD: timecal_password
+      DB_NAME: timecal_db
+      JWT_SECRET: dev-secret-key-change-in-production
+      PORT: 8080
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+      - /app/vendor
+    command: air -c .air.toml
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: timecal-frontend
+    environment:
+      VITE_API_URL: http://localhost:8080
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    command: npm run dev
+
+volumes:
+  postgres_data:

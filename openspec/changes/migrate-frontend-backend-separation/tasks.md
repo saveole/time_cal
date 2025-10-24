@@ -1,0 +1,138 @@
+## 1. Project Setup and Foundation
+- [x] 1.1 Create Go backend project structure
+  - [x] Initialize Go module with `go mod init`
+  - [x] Set up directory structure (cmd, internal, pkg, configs)
+  - [x] Add Gin framework dependency
+  - [x] Configure environment variables (.env support)
+- [x] 1.2 Create Vite frontend project structure
+  - [x] Initialize Vite + React + TypeScript project
+  - [x] Configure TailwindCSS integration
+  - [x] Add shadcn/ui initialization
+  - [x] Set up TanStack dependencies (Query, Router, Form)
+- [x] 1.3 Configure development environment
+  - [x] Set up Docker Compose for local development
+  - [x] Configure database connection (PostgreSQL)
+  - [x] Set up hot reload for both frontend and backend
+  - [x] Add environment-specific configurations
+
+## 2. Backend API Implementation
+- [x] 2.1 Core server setup
+  - [x] Implement basic Gin server with health check
+  - [x] Add middleware for logging and CORS
+  - [x] Configure structured logging
+  - [x] Set up graceful shutdown handling
+- [x] 2.2 Database integration
+  - [x] Add GORM ORM dependency
+  - [x] Implement database models matching current schema
+  - [x] Create migration system
+  - [x] Set up connection pooling and health checks
+- [x] 2.3 Authentication system
+  - [x] Implement JWT token generation and validation
+  - [x] Create authentication middleware
+  - [x] Build user authentication endpoints (/api/auth/login, /api/auth/refresh)
+  - [x] Add password hashing with bcrypt
+- [x] 2.4 Time tracking API
+  - [x] Implement time entry CRUD operations
+  - [x] Add query parameters for filtering and pagination
+  - [x] Validate input data and constraints
+  - [x] Add comprehensive error handling
+- [x] 2.5 Daily planning API
+  - [x] Implement daily plan CRUD operations
+  - [x] Add activity management endpoints
+  - [x] Implement progress tracking functionality
+  - [x] Add time estimation and actual time tracking
+- [x] 2.6 Statistics API
+  - [x] Implement statistics calculation endpoints
+  - [x] Add time-based aggregations (daily, weekly, monthly)
+  - [x] Optimize queries for performance
+  - [x] Add caching for expensive calculations
+
+## 3. Frontend Migration
+- [x] 3.1 Setup and configuration
+  - [x] Configure API client with base URLs
+  - [x] Set up TanStack Query with proper configuration
+  - [x] Configure TanStack Router with routes
+  - [x] Implement global error handling
+- [x] 3.2 Authentication integration
+  - [x] Create authentication context and hooks
+  - [x] Implement login/logout functionality
+  - [x] Add token storage and refresh logic
+  - [x] Create protected route components
+- [x] 3.3 Component migration
+  - [x] Migrate time tracking components to use TanStack Query
+  - [x] Update daily planning components for new API
+  - [x] Migrate statistics components and charts
+  - [x] Ensure all shadcn/ui components are properly integrated
+- [x] 3.4 Form handling
+  - [x] Implement TanStack Form for all forms
+  - [x] Add form validation with proper error messages
+  - [x] Ensure forms work with new API endpoints
+  - [x] Add loading and error states to forms
+
+## 4. API Documentation and Testing
+- [x] 4.1 OpenAPI specification
+  - [x] Generate OpenAPI spec from Go code annotations
+  - [x] Set up Swagger UI for documentation
+  - [x] Document all endpoints with examples
+  - [x] Validate spec against implementation
+- [x] 4.2 Backend testing
+  - [x] Write unit tests for business logic
+  - [ ] Add integration tests for API endpoints
+  - [ ] Implement database testing with test containers
+  - [ ] Set up test coverage reporting
+- [ ] 4.3 Frontend testing
+  - [ ] Add unit tests for components and hooks
+  - [ ] Implement integration tests for user flows
+  - [ ] Add E2E tests with Playwright or Cypress
+  - [ ] Test API client error handling
+
+## 5. Data Migration and Deployment
+- [ ] 5.1 Data migration
+  - [ ] Create migration scripts from Supabase to PostgreSQL
+  - [ ] Implement data validation and consistency checks
+  - [ ] Plan and execute migration with minimal downtime
+  - [ ] Verify data integrity after migration
+- [ ] 5.2 Production configuration
+  - [ ] Configure production Docker images
+  - [ ] Set up environment variables for production
+  - [ ] Configure logging and monitoring
+  - [ ] Add health checks and readiness probes
+- [ ] 5.3 Deployment setup
+  - [ ] Create CI/CD pipeline configuration
+  - [ ] Set up automated testing and deployment
+  - [ ] Configure database backups and recovery
+  - [ ] Add performance monitoring and alerting
+
+## 6. Validation and Documentation
+- [ ] 6.1 Feature validation
+  - [ ] Test all migrated features end-to-end
+  - [ ] Validate performance improvements
+  - [ ] Ensure authentication flows work correctly
+  - [ ] Verify API reliability and error handling
+- [x] 6.2 Documentation updates
+  - [x] Update project README with new architecture
+  - [x] Document development setup and deployment
+  - [x] Create API consumer documentation
+  - [x] Add troubleshooting guides
+- [x] 6.3 Cleanup and finalization
+  - [x] Remove Next.js dependencies and code
+  - [x] Clean up Supabase configuration
+  - [x] Archive old code and configurations
+  - [x] Update all references to new architecture
+
+## 7. Post-Migration Tasks
+- [ ] 7.1 Performance optimization
+  - [ ] Monitor API performance and optimize slow queries
+  - [ ] Implement additional caching where needed
+  - [ ] Optimize frontend bundle sizes
+  - [ ] Add performance monitoring
+- [ ] 7.2 Security review
+  - [ ] Conduct security audit of new authentication system
+  - [ ] Review API security configurations
+  - [ ] Implement rate limiting and abuse prevention
+  - [ ] Update security headers and CORS configurations
+- [ ] 7.3 User acceptance testing
+  - [ ] Conduct thorough testing with real data
+  - [ ] Collect feedback from stakeholders
+  - [ ] Address any usability issues
+  - [ ] Finalize migration and switch over completely
